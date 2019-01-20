@@ -1,0 +1,41 @@
+<!-- 
+		 1. 수업을 듣는 사람들이 어떤 수업을 듣는지 차트로 출력하기 위해 수업별 비율을 구하는 쿼리이다.
+		 2. 모든 회원은 (어떤 수업이건) 수업을 들은 것을 전제로 한다. 
+		 3. 회원은 정규수업(step1~3)을 듣는 사람과 듣지 않는 사람으로 나뉜다. 
+		 4. 정규수업을 듣는 사람들은 그 수업 이름 그대로, 정규수업을 듣지 않은 사람은 '생존전략'을 들은 것으로 간주하여 class_nm에 넣어준다.
+		 5. 전체 회원이 듣는 수업을 보여주는 테이블을 A라고 한다.
+		 6. 수업별 개수(count)를 구하기 위해 group by로 수업을 묶는다.
+		 7. 전체 수업을 분모로, 수업별 개수를 분자로 두어 수업별 비율을 구한다.
+		 8. 클래스이름을 labels로, 수업별 비율을 series로 명명한다. 
+		 9. 이렇게 구한 labels와 series는 controller를 타고 view로 내려가 각각 labelsArr와 seriesArr이라는 이름의 배열로 만들어지고 
+		 	Chartis.js의 Pie 메소드를 통해 파이 형식의 차트로 출력되게 된다.   	
+	 -->	
+	<select id="selectPieChartServiceList" resultType="egovMap">	
+		select A.class_nm labels
+	 		  ,round(count(A.class_nm)/(select count(ST.class_nm) class_cnt
+										  from 
+											(select gs.class_nm
+											   from	t_user ur
+										  	   join	t_gisu gs
+												 on	ur.user_id = gs.user_id
+										  union all
+											 select	'생존전략' class_nm
+											   from	t_user ur
+								   where not exists
+												(select	user_id 
+												   from	t_gisu
+												  where	user_id = ur.user_id)) ST)*100) series
+		 from
+			 (select gs.class_nm
+				from t_user ur
+				join t_gisu gs
+				  on ur.user_id = gs.user_id
+		   union all
+			  select '생존전략' class_nm
+			    from t_user ur
+			   where not exists
+				(select user_id 
+				   from t_gisu
+				  where user_id = ur.user_id)) A
+	 group by class_nm
+	</select>
